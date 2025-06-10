@@ -1,0 +1,181 @@
+* {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, #9ad0ec, #ffffff);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+  }
+  
+  h1 {
+    margin-top: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+  
+  #menu {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+  }
+  
+  button {
+    padding: 12px 24px;
+    border: none;
+    background-color: #4a90e2;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgb(74 144 226 / 0.4);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  button:hover:not(:disabled) {
+    background-color: #357abd;
+    transform: translateY(-2px);
+  }
+  
+  button:disabled {
+    background-color: #a1c4e9;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  
+  #battle {
+    margin-top: 25px;
+    background: #f9f9f9;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgb(0 0 0 / 0.15);
+    padding: 20px 30px;
+    width: 90%;
+    max-width: 700px;
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .pokemon-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .pokemon-info {
+    width: 45%;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 3px 6px rgb(0 0 0 / 0.1);
+    padding: 15px 20px;
+    text-align: center;
+  }
+  
+  .pokemon-info h2 {
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    color: #2a2a2a;
+  }
+  
+  .hp-bar {
+    position: relative;
+    height: 22px;
+    background-color: #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+    box-shadow: inset 0 2px 5px rgb(255 255 255 / 0.7);
+  }
+  
+  .hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #81c784);
+    width: 100%;
+    transition: width 0.7s ease-in-out;
+    border-radius: 12px 0 0 12px;
+    box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.25);
+  }
+  
+  .hp-fill.low {
+    background: linear-gradient(90deg, #f44336, #e57373);
+  }
+  
+  .hp-text {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    text-align: center;
+    font-weight: 600;
+    line-height: 22px;
+    color: white;
+    text-shadow: 0 0 3px rgba(0,0,0,0.6);
+    user-select: none;
+  }
+  
+  #battleLog {
+    background: #e0e7f6;
+    border-radius: 15px;
+    padding: 15px;
+    height: 120px;
+    overflow-y: auto;
+    font-size: 1rem;
+    line-height: 1.3;
+    color: #2c3e50;
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.1);
+    user-select: none;
+  }
+  
+  #moves {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  #moves button {
+    flex: 1 1 calc(50% - 10px);
+    max-width: 150px;
+    background-color: #1976d2;
+    box-shadow: 0 3px 7px rgb(25 118 210 / 0.5);
+  }
+  
+  #moves button:hover:not(:disabled) {
+    background-color: #0d47a1;
+  }
+  
+  #backToMenu {
+    margin-top: 15px;
+    background-color: #d32f2f;
+    box-shadow: 0 3px 7px rgb(211 47 47 / 0.6);
+    width: 100%;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  
+  #backToMenu:hover {
+    background-color: #b71c1c;
+  }
+  
+  /* Scrollbar suave para battleLog */
+  #battleLog::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  #battleLog::-webkit-scrollbar-thumb {
+    background-color: #90a4ae;
+    border-radius: 10px;
+  }
+  
+  #battleLog::-webkit-scrollbar-track {
+    background-color: #cfd8dc;
+  }
+  

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>POKEMON BETA BATTLES</title>
+<style>
+  /* --- Estilos generales --- */
+  body {
+    background: linear-gradient(to bottom, #87ceeb 0%, #f0f8ff 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #222;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+  h1 {
+    text-align: center;
+    margin: 15px 0;
+    font-weight: 700;
+    color: #444;
+  }
+  #menu, #battle {
+    max-width: 600px;
+    margin: 10px auto;
+    padding: 15px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+  }
+  #menu button, #battle #moves button {
+    background: #4CAF50;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin: 6px 5px 6px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    min-width: 90px;
+  }
+  #menu button:hover, #battle #moves button:hover {
+    background: #45a049;
+  }
+  #menu button:disabled, #battle #moves button:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+  #battle {
+    display: none;
+  }
+  #battle.active {
+    display: block;
+  }
+  #battle .sprites {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #battle .sprites img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px #333);
+  }
+  #battle .info {
+    text-align: center;
+    margin: 10px 0;
+  }
+  #battle .hp-bar {
+    width: 100%;
+    background: #ddd;
+    border-radius: 12px;
+    height: 22px;
+    margin: 6px 0 10px 0;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.15);
+  }
+  #battle .hp-fill {
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.6s ease;
+  }
+  #battle .hp-fill.low {
+    background: #e74c3c;
+  }
+  #battle #battleLog {
+    background: #f7f7f7;
+    border: 1px solid #ccc;
+    height: 100px;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    white-space: pre-line;
+  }
+  #battle #moves {
+    text-align: center;
+  }
+  #battle #backToMenu {
+    background: #f44336;
+    margin-top: 15px;
+  }
+  #credits {
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+
+<h1>POKEMON BETA BATTLES</h1>
+
+<div id="menu">
+  <button id="btn1v1">1v1 (Jugador vs Jugador)</button>
+  <button id="btnVsIA">VS IA</button>
+  <button id="btnHistoria">Modo Historia</button>
+  <button id="btnOnline">Modo Online</button>
+</div>
+
+<div id="battle">
+  <div class="sprites">
+    <div>
+      <div class="info">
+        <strong id="playerName">Player</strong><br />
+        <div class="hp-bar" title="HP Player">
+          <div id="playerHPBar" class="hp-fill"></div>
+        </div>
+        <span id="playerHPText">HP</span>
+      </div>
+      <img id="playerSprite" src="" alt="Player Pokémon" />
+    </div>
+    <div>
+      <div class="info">
+        <strong id="enemyName">Enemy</strong><br />
+        <div class="hp-bar" title="HP Enemy">
+          <div id="enemyHPBar" class="hp-fill"></div>
+        </div>
+        <span id="enemyHPText">HP</span>
+      </div>
+      <img id="enemySprite" src="" alt="Enemy Pokémon" />
+    </div>
+  </div>
+
+  <div id="battleLog">¡La batalla va a empezar!</div>
+
+  <div id="moves"></div>
+
+  <button id="backToMenu">Volver al Menú</button>
+</div>
+
+<div id="credits">
+  Hecho por Jezki Tolces &nbsp; | &nbsp; Instagram: @jezkitolces
+</div>
+
+<script>
+(() => {
+  // --- Datos Pokémon y ataques ---
+  const pokemons = {
+    pikachu: {
+      name: "Pikachu",
+      hpMax: 120,
+      spriteFront: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+      spriteBack: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png",
+      moves: [
+        { name: "Impactrueno", power: 25, sound: "zap" },
+        { name: "Placaje", power: 20, sound: "hit" },
+        { name: "Rayo", power: 30, sound: "zap" },
+        { name: "Refugio", power: 0, sound: "shield" }
+      ]
+    },
+    charmander: {
+      name: "Charmander",
+      hpMax: 130,
+      spriteFront: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png",
+      spriteBack: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/4.png",
+      moves: [
+        { name: "Ascuas", power: 30, sound: "fire" },
+        { name: "Arañazo", power: 15, sound: "hit" },
+        { name: "Garra", power: 20, sound: "hit" },
+        { name: "Refugio", power: 0, sound: "shield" }
+      ]
+    },
+    bulbasaur: {
+      name: "Bulbasaur",
+      hpMax: 140,
+      spriteFront: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",
+      spriteBack: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png",
+      moves: [
+        { name: "Látigo Cepa", power: 25, sound: "vine" },
+        { name: "Placaje", power: 20, sound: "hit" },
+        { name: "Drenadoras", power: 20, sound: "vine" },
+        { name: "Refugio", power: 0, sound: "shield" }
+      ]
+    },
+    squirtle: {
+      name: "Squirtle",
+      hpMax: 135,
+      spriteFront: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png",
+      spriteBack: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/7.png",
+      moves: [
+        { name: "Pistola Agua", power: 30, sound: "water" },
+        { name: "Placaje", power: 20, sound: "hit" },
+        { name: "Refugio", power: 0, sound: "shield" },
+        { name: "Hidrobomba", power: 35, sound: "water" }
+      ]
+    }
+  };
+
+  // Sonidos base64 para que no haga falta cargar archivos externos
+  const sounds = {
+    zap: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAIA+AAABAAgAZGF0YQAAAAA=", // muy simple beep
+    hit: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAIA+AAABAAgAZGF0YQAAAAA=",
+    fire: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAIA+AAABAAgAZGF0YQAAAAA=",
+    shield: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAIA+AAABAAgAZGF0YQAAAAA=",
+    vine: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAIA+AAABAAgAZGF0YQAAAAA=",
+    water: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAIA+AAABAAgAZGF0YQAAAAA="
+  };
+
+  // Variables globales
+  let currentMode = null; // "1v1" o "vsIA"
+  let battleInProgress = false;
+  let isPlayerTurn = true;
+
+  let player, enemy;
+  let playerHP, enemyHP;
+
+  // Elementos DOM
+  const menuDiv = document.getElementById("menu");
+  const battleDiv = document.getElementById("battle");
+
+  const playerNameEl = document.getElementById("playerName");
+  const enemyNameEl = document.getElementById("enemyName");
+  const playerSpriteEl = document.getElementById("playerSprite");
+  const enemySpriteEl = document.getElementById("enemySprite");
+  const playerHPBar = document.getElementById("playerHPBar");
+  const enemyHPBar = document.getElementById("enemyHPBar");
+  const playerHPText = document.getElementById("playerHPText");
+  const enemyHPText = document.getElementById("enemyHPText");
+  const battleLog = document.getElementById("battleLog");
+  const movesDiv = document.getElementById("moves");
+  const backToMenuBtn = document.getElementById("backToMenu");
+
+  // Botones menú
+  document.getElementById("btn1v1").onclick = () => {
+    currentMode = '1v1';
+    startBattle();
+  };
+  document.getElementById("btnVsIA").onclick = () => {
+    currentMode = 'vsIA';
+    startBattle();
+  };
+  document.getElementById("btnHistoria").onclick = () => {
+    alert("Modo Historia: Próximamente. ¡Espéralo!");
+  };
+  document.getElementById("btnOnline").onclick = () => {
+    alert("Modo Online: Próximamente. ¡Espéralo!");
+  };
+  backToMenuBtn.onclick = () => {
+    if (battleInProgress) {
+      if (!confirm("¿Quieres salir de la batalla y volver al menú?")) return;
+    }
+    resetGame();
+  };
+
+  // Función para clonar un objeto (para no modificar los originales)
+  function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  // Función para elegir enemigo random (distinto de Pikachu)
+  function randomEnemy() {
+    const keys = Object.keys(pokemons).filter(k => k !== "pikachu");
+    const r = keys[Math.floor(Math.random()*keys.length)];
+    return clone(pokemons[r]);
+  }
+
+  // Iniciar batalla
+  function startBattle() {
+    menuDiv.style.display = "none";
+    battleDiv.classList.add("active");
+    battleLog.textContent = "";
+    movesDiv.innerHTML = "";
+    battleInProgress = true;
+    isPlayerTurn = true;
+
+    // Siempre jugador = Pikachu para simplificar, enemigo random
+    player = clone(pokemons.pikachu);
+    playerHP = player.hpMax;
+    enemy = randomEnemy();
+    enemyHP = enemy.hpMax;
+
+    updateBattleUI();
+    showMessage(`¡Empieza la batalla!\nTu Pokémon es ${player.name}.\nEnemigo: ${enemy.name}.`);
+
+    setTimeout(() => {
+      if (currentMode === "vsIA") {
+        setupMoves(false);
+      } else if (currentMode === "1v1") {
+        setupMoves(true);
+      }
+    }, 1500);
+  }
+
+  // Actualizar UI
+  function updateBattleUI() {
+    playerNameEl.textContent = player.name;
+    playerSpriteEl.src = player.spriteBack;
+    enemyNameEl.textContent = enemy.name;
+    enemySpriteEl.src = enemy.spriteFront;
+    updateHPBars();
+  }
+
+  function updateHPBars() {
+    playerHPBar.style.width = (playerHP/player.hpMax)*100 + "%";
+    enemyHPBar.style.width = (enemyHP/enemy.hpMax)*100 + "%";
+
+    playerHPText.textContent = `HP: ${playerHP} / ${player.hpMax}`;
+    enemyHPText.textContent = `HP: ${enemyHP} / ${enemy.hpMax}`;
+
+    playerHPBar.classList.toggle("low", playerHP <= player.hpMax*0.25);
+    enemyHPBar.classList.toggle("low", enemyHP <= enemy.hpMax*0.25);
+  }
+
+  // Mostrar mensaje en log
+  function showMessage(text) {
+    battleLog.textContent = text;
+    battleLog.scrollTop = battleLog.scrollHeight;
+  }
+
+  // Activar o desactivar botones movimientos
+  function enableMoveButtons(enable) {
+    const buttons = movesDiv.querySelectorAll("button");
+    buttons.forEach(b => b.disabled = !enable);
+  }
+
+  // Configurar botones de movimientos jugador
+  function setupMoves(isPvP) {
+    movesDiv.innerHTML = "";
+    player.moves.forEach((move, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = move.name;
+      btn.disabled = false;
+      btn.onclick = () => {
+        if (!battleInProgress) return;
+        if (!isPlayerTurn) return;
+        disableAllButtons();
+        handlePlayerMove(i, isPvP);
+      };
+      movesDiv.appendChild(btn);
+    });
+  }
+
+  // Deshabilita todos los botones de movimiento
+  function disableAllButtons() {
+    const buttons = movesDiv.querySelectorAll("button");
+    buttons.forEach(b => b.disabled = true);
+  }
+
+  // Turno jugador
+  async function handlePlayerMove(moveIndex, isPvP) {
+    const move = player.moves[moveIndex];
+    isPlayerTurn = false;
+    await performMove("Jugador", player, enemy, move);
+
+    if (enemyHP <= 0) {
+      finishBattle("¡Ganaste! 🎉");
+      return;
+    }
+    if (isPvP) {
+      showMessage("Turno del jugador 2, elige ataque.");
+      setupEnemyMovesPvP();
+    } else {
+      setTimeout(enemyTurnVsIA, 1500);
+    }
+  }
+
+  // Configurar botones movimientos jugador 2 (PvP)
+  function setupEnemyMovesPvP() {
+    movesDiv.innerHTML = "";
+    enemy.moves.forEach((move, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = move.name;
+      btn.disabled = false;
+      btn.onclick = () => {
+        if (!battleInProgress) return;
+        disableAllButtons();
+        handleEnemyMovePvP(i);
+      };
+      movesDiv.appendChild(btn);
+    });
+  }
+
+  // Turno jugador 2 PvP
+  async function handleEnemyMovePvP(moveIndex) {
+    const move = enemy.moves[moveIndex];
+    isPlayerTurn = true;
+    await performMove("Jugador 2", enemy, player, move);
+
+    if (playerHP <= 0) {
+      finishBattle("¡Perdiste! 😞");
+      return;
+    }
+    showMessage("Turno tuyo, elige ataque.");
+    setupMoves(true);
+  }
+
+  // Turno IA (elige ataque random)
+  async function enemyTurnVsIA() {
+    if (!battleInProgress) return;
+    const moveIndex = Math.floor(Math.random() * enemy.moves.length);
+    const move = enemy.moves[moveIndex];
+    await performMove("IA", enemy, player, move);
+
+    if (playerHP <= 0) {
+      finishBattle("¡Perdiste! 😞");
+      return;
+    }
+    isPlayerTurn = true;
+    showMessage("Tu turno, elige ataque.");
+    enableMoveButtons(true);
+  }
+
+  // Ejecutar ataque
+  function performMove(attackerName, attacker, defender, move) {
+    return new Promise(resolve => {
+      // Si movimiento sin daño (Refugio)
+      if (move.power === 0) {
+        showMessage(`${attackerName} usó ${move.name}.\nSe protege este turno.`);
+        playSound(move.sound);
+        setTimeout(() => resolve(), 1600);
+        return;
+      }
+
+      // Calcular daño con algo de variación +/-10%
+      const variance = (Math.random() * 0.2) + 0.9; // 0.9 a 1.1
+      let damage = Math.floor(move.power * variance);
+
+      // Animar ataque
+      showMessage(`${attackerName} usó ${move.name}!`);
+      playSound(move.sound);
+
+      // Animación y cambio HP
+      setTimeout(() => {
+        if (defender === enemy) {
+          enemyHP -= damage;
+          if (enemyHP < 0) enemyHP = 0;
+          updateHPBars();
+          showMessage(`${attackerName} hizo ${damage} de daño.`);
+        } else {
+          playerHP -= damage;
+          if (playerHP < 0) playerHP = 0;
+          updateHPBars();
+          showMessage(`${attackerName} hizo ${damage} de daño.`);
+        }
+        setTimeout(resolve, 1000);
+      }, 1400);
+    });
+  }
+
+  // Sonidos (por ahora beep simple)
+  function playSound(soundKey) {
+    if (!sounds[soundKey]) return;
+    const audio = new Audio(sounds[soundKey]);
+    audio.volume = 0.2;
+    audio.play();
+  }
+
+  // Terminar batalla
+  function finishBattle(msg) {
+    battleInProgress = false;
+    showMessage(msg + "\nPulsa Volver al Menú.");
+    disableAllButtons();
+  }
+
+  // Resetear todo y volver al menú
+  function resetGame() {
+    battleInProgress = false;
+    currentMode = null;
+    player = null;
+    enemy = null;
+    playerHP = 0;
+    enemyHP = 0;
+    isPlayerTurn = true;
+
+    battleDiv.classList.remove("active");
+    menuDiv.style.display = "block";
+    battleLog.textContent = "";
+    movesDiv.innerHTML = "";
+  }
+})();
+</script>
+
+</body>
+</html>
+
+
